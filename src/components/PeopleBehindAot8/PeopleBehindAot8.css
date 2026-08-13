@@ -1,0 +1,95 @@
+.people-behind {
+  position: relative;
+  height: 420svh;
+  overflow: clip;
+  background: #e7e9df;
+  color: #112a23;
+}
+
+.people-behind__pinned {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+}
+
+.people-behind__pinned::before {
+  position: absolute;
+  top: 10%;
+  right: -15rem;
+  width: 32rem;
+  height: 32rem;
+  border-radius: 50%;
+  background: rgba(132, 165, 145, 0.14);
+  filter: blur(90px);
+  content: '';
+}
+
+.people-behind__eyebrow {
+  position: absolute;
+  z-index: 2;
+  top: clamp(7rem, 12vh, 9rem);
+  left: clamp(1.5rem, 7vw, 8rem);
+  margin: 0;
+  color: rgba(17, 42, 35, 0.68);
+  font: 500 0.65rem/1.35 Arial, sans-serif;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.people-behind__stage { position: relative; height: 100%; }
+.people-behind__person {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.89fr) minmax(22rem, 0.75fr);
+  align-items: center;
+  justify-content: center;
+  gap: clamp(3rem, 9vw, 11rem);
+  padding: clamp(10rem, 17vh, 12rem) clamp(1.5rem, 8vw, 10rem) clamp(4rem, 10vh, 7rem);
+  opacity: var(--person-opacity);
+  pointer-events: none;
+}
+
+.people-behind__portrait {
+  width: min(100%, 35rem);
+  height: min(59vh, 42rem);
+  justify-self: end;
+  overflow: hidden;
+  background: #d9dfd5;
+  transform: translateX(var(--person-shift)) scale(var(--person-scale));
+  transform-origin: center;
+  transition: transform 60ms linear;
+}
+
+.people-behind__portrait img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center top; filter: saturate(0.83) contrast(1.04); }
+.people-behind__content { width: min(100%, 32rem); align-self: center; transform: translateX(calc(var(--person-shift) * -0.3)); transition: transform 60ms linear; }
+.people-behind__role { margin: 0 0 1.3rem; color: #16815e; font: 500 0.65rem/1.35 Arial, sans-serif; letter-spacing: 0.19em; text-transform: uppercase; }
+.people-behind h2 { max-width: 9ch; margin: 0; font: 400 clamp(3rem, 5.7vw, 6.4rem)/0.86 Arial, sans-serif; letter-spacing: -0.09em; text-transform: uppercase; }
+.people-behind__title { margin: clamp(1.6rem, 3vh, 2.4rem) 0 0; font: 500 clamp(0.88rem, 1vw, 1rem)/1.35 Arial, sans-serif; letter-spacing: 0.08em; text-transform: uppercase; }
+.people-behind__bio { max-width: 28rem; margin: 1.4rem 0 0; color: rgba(17, 42, 35, 0.72); font: 400 clamp(0.98rem, 1.15vw, 1.12rem)/1.55 Arial, sans-serif; }
+.people-behind__socials { display: flex; gap: 0.75rem; margin-top: 1.7rem; }
+.people-behind__socials a { display: grid; width: 1.55rem; height: 1.55rem; place-items: center; border: 1px solid rgba(17, 42, 35, 0.38); border-radius: 50%; color: #112a23; font: 600 0.62rem/1 Arial, sans-serif; text-decoration: none; transition: background-color 160ms ease, color 160ms ease; }
+.people-behind__socials a:hover, .people-behind__socials a:focus-visible { color: #edf4ef; background: #112a23; outline: none; }
+.people-behind__index { margin: clamp(2.4rem, 6vh, 5rem) 0 0; color: #112a23; font: 400 0.82rem/1 Arial, sans-serif; letter-spacing: 0.12em; }
+.people-behind__index span { color: rgba(17, 42, 35, 0.5); }
+
+@media (max-width: 760px) {
+  .people-behind { height: 390svh; }
+  .people-behind__eyebrow { top: 6.5rem; left: 1.5rem; }
+  .people-behind__person { grid-template-columns: 1fr; align-content: center; gap: 2.4rem; padding: 9.5rem 1.5rem 3rem; }
+  .people-behind__portrait { width: min(100%, 30rem); height: min(42svh, 29rem); justify-self: center; }
+  .people-behind__content { width: min(100%, 30rem); justify-self: center; }
+  .people-behind h2 { font-size: clamp(2.75rem, 13vw, 4.8rem); }
+  .people-behind__bio { margin-top: 1rem; }
+  .people-behind__index { margin-top: 1.7rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .people-behind { height: auto; }
+  .people-behind__pinned { position: relative; height: auto; padding: 7rem 1.5rem 4rem; }
+  .people-behind__eyebrow { position: relative; top: auto; left: auto; }
+  .people-behind__stage { display: grid; gap: 5rem; margin-top: 4rem; }
+  .people-behind__person { position: relative; display: grid; padding: 0; opacity: 1; }
+  .people-behind__portrait, .people-behind__content { transform: none; transition: none; }
+}

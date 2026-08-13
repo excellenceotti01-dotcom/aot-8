@@ -1,0 +1,8 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/aot-8/*"
+  to = "/index.html"
+  status = 200

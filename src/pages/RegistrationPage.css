@@ -1,0 +1,1 @@
+.registration-page { min-height: 100svh; background: #07100f; }.registration-page__main { display: grid; min-height: 100svh; padding: clamp(7rem, 13vh, 9rem) 0 clamp(4rem, 8vh, 6rem); background: #07100f; }
