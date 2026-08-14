@@ -12,7 +12,7 @@ const SPEAKERS_ENDPOINT = 'https://aotlagos.com/wp-json/aot8/v1/speakers'
 const SESSIONS_ENDPOINT = 'https://aotlagos.com/wp-json/aot8/v1/sessions'
 const SPONSORS_ENDPOINT = 'https://aotlagos.com/wp-json/aot8/v1/sponsors'
 const REGISTRATION_SETTINGS_ENDPOINT = 'https://aotlagos.com/wp-json/aot8/v1/registration/settings'
-const HERO_STATES_ENDPOINT = 'https://aotlagos.com/wp-json/aot8/v1/hero-states'
+const HERO_STATES_ENDPOINT = '/.netlify/functions/hero-states'
 
 const valueOrFallback = (value, fallback) => (typeof value === 'string' && value.trim() ? value.trim() : fallback)
 
