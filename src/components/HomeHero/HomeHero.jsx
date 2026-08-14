@@ -9,20 +9,21 @@ const ROTATION_DELAY = 5000
 const RESUME_DELAY = 1000
 
 export function HomeHero({ showNavbar = true }) {
-  const { settings: aot8Settings, heroStates } = useAot8Settings()
+  const { settings: aot8Settings, heroStates, heroStatesStatus } = useAot8Settings()
   const [activeIndex, setActiveIndex] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
   const [isFormationSettled, setIsFormationSettled] = useState(false)
   const [reducedMotion, setReducedMotion] = useState(false)
   const resumeTimerRef = useRef(null)
   const interactionsRef = useRef(new Set())
-  const propositions = heroStates.data
-  const activeFormationRef = useRef(propositions[0].networkForm)
-  const state = propositions[activeIndex]
+  const propositions = heroStatesStatus === 'loading' ? [] : heroStates.data
+  const activeFormationRef = useRef(null)
+  const currentIndex = activeIndex < propositions.length ? activeIndex : 0
+  const state = propositions[currentIndex] ?? null
 
   useEffect(() => {
-    activeFormationRef.current = state.networkForm
-  }, [state.networkForm])
+    if (state) activeFormationRef.current = state.networkForm
+  }, [state])
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -33,10 +34,10 @@ export function HomeHero({ showNavbar = true }) {
   }, [])
 
   useEffect(() => {
-    if (isPaused || reducedMotion || !isFormationSettled) return undefined
+    if (isPaused || reducedMotion || !isFormationSettled || propositions.length === 0) return undefined
     const timer = window.setTimeout(() => {
       setIsFormationSettled(false)
-      setActiveIndex((index) => (index + 1) % propositions.length)
+      setActiveIndex((index) => ((index < propositions.length ? index : 0) + 1) % propositions.length)
     }, ROTATION_DELAY)
     return () => window.clearTimeout(timer)
   }, [activeIndex, isPaused, isFormationSettled, propositions.length, reducedMotion])
@@ -65,20 +66,22 @@ export function HomeHero({ showNavbar = true }) {
       className="network-prototype"
       aria-label="AOT Lagos 8.0"
     >
-      <NetworkFormation
-        formation={state.networkForm}
-        reducedMotion={reducedMotion}
-        onInteractionStart={pause}
-        onInteractionEnd={resume}
-        onFormationSettled={handleFormationSettled}
-      />
+      {state && (
+        <NetworkFormation
+          formation={state.networkForm}
+          reducedMotion={reducedMotion}
+          onInteractionStart={pause}
+          onInteractionEnd={resume}
+          onFormationSettled={handleFormationSettled}
+        />
+      )}
       <div className="network-prototype__atmosphere" aria-hidden="true" />
       {showNavbar && <SiteNavbar />}
       <div className="network-prototype__identity">
         <p>{aot8Settings.brand.identityLabel.split('\n').map((line, index) => <span key={line}>{index > 0 && <br />}{line}</span>)}</p>
         <h1>{aot8Settings.brand.identityTitle} <span>{aot8Settings.brand.identityEdition}</span></h1>
       </div>
-      <HeroContent state={state} onInteractionStart={pause} onInteractionEnd={resume} />
+      {state && <HeroContent state={state} onInteractionStart={pause} onInteractionEnd={resume} />}
     </main>
   )
 }
