@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAot8Settings } from '../../lib/useAot8Settings'
 import { SiteNavbar } from '../SiteNavbar/SiteNavbar'
 import { HeroContent } from './HeroContent'
@@ -16,23 +16,7 @@ export function HomeHero({ showNavbar = true }) {
   const [reducedMotion, setReducedMotion] = useState(false)
   const resumeTimerRef = useRef(null)
   const interactionsRef = useRef(new Set())
-  const propositions = useMemo(() => (
-    heroStates.meta.source === 'wordpress'
-      ? heroStates.data
-      : heroStates.data.map((proposition) => (
-        proposition.id === 'attend'
-          ? {
-              ...proposition,
-              headline: aot8Settings.hero?.heading ?? proposition.headline,
-              description: aot8Settings.hero?.subheading ?? proposition.description,
-              cta: {
-                label: aot8Settings.hero?.ctaText ?? proposition.cta.label,
-                href: aot8Settings.hero?.ctaUrl ?? proposition.cta.href,
-              },
-            }
-          : proposition
-      ))
-  ), [aot8Settings.hero, heroStates])
+  const propositions = heroStates.data
   const activeFormationRef = useRef(propositions[0].networkForm)
   const state = propositions[activeIndex]
 

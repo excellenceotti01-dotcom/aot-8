@@ -209,42 +209,57 @@ async function getRegistrationSettings() {
   return normalizeAot8RegistrationSettings(await response.json())
 }
 
-const heroStateKeys = new Set(heroPropositions.map((proposition) => proposition.id))
+const HERO_STATE_KEYS = [
+  'attend',
+  'speak',
+  'sponsor',
+  'exhibit',
+  'explore',
+  'media',
+]
+
+const heroStateKeys = new Set(HERO_STATE_KEYS)
+const heroStateContentFields = ['eyebrow', 'heading', 'description', 'cta_label', 'cta_url']
+const mockHeroStates = () => ({ data: heroPropositions, meta: { source: 'mock', total: heroPropositions.length } })
+
+function isValidHeroState(state) {
+  return state
+    && typeof state === 'object'
+    && typeof state.state_key === 'string'
+    && heroStateKeys.has(state.state_key)
+    && typeof state.enabled === 'boolean'
+    && Number.isFinite(Number(state.display_order))
+    && heroStateContentFields.every((field) => typeof state[field] === 'string' && state[field].trim())
+}
 
 export function normalizeAot8HeroStates(response) {
-  const cmsStates = response
-  if (!Array.isArray(cmsStates) || cmsStates.length === 0 || cmsStates.length !== heroPropositions.length) {
-    return { data: heroPropositions, meta: { source: 'mock', total: heroPropositions.length } }
-  }
+  if (!Array.isArray(response)) return mockHeroStates()
 
-  const statesByKey = new Map()
-  for (const state of cmsStates) {
-    if (!state || typeof state !== 'object' || !heroStateKeys.has(state.state_key) || typeof state.enabled !== 'boolean' || !Number.isFinite(Number(state.display_order)) || statesByKey.has(state.state_key)) {
-      return { data: heroPropositions, meta: { source: 'mock', total: heroPropositions.length } }
-    }
-    statesByKey.set(state.state_key, state)
-  }
+  const seenStateKeys = new Set()
+  const normalizedStates = response
+    .filter((state) => state?.enabled === true)
+    .map((state, sourceIndex) => ({ state, sourceIndex, displayOrder: Number(state?.display_order) }))
+    .filter(({ state, displayOrder }) => isValidHeroState(state) && Number.isFinite(displayOrder))
+    .sort((first, second) => first.displayOrder - second.displayOrder || first.sourceIndex - second.sourceIndex)
+    .flatMap(({ state, displayOrder }) => {
+      if (seenStateKeys.has(state.state_key)) return []
+      seenStateKeys.add(state.state_key)
 
-  if (statesByKey.size !== heroPropositions.length) return { data: heroPropositions, meta: { source: 'mock', total: heroPropositions.length } }
+      const proposition = heroPropositions.find((item) => item.id === state.state_key)
+      return [{
+        ...proposition,
+        eyebrow: state.eyebrow.trim(),
+        headline: state.heading.trim(),
+        description: state.description.trim(),
+        cta: {
+          label: state.cta_label.trim(),
+          href: state.cta_url.trim(),
+        },
+        displayOrder,
+      }]
+    })
 
-  const normalizedStates = heroPropositions.flatMap((proposition) => {
-    const state = statesByKey.get(proposition.id)
-    if (!state.enabled) return []
-
-    return [{
-      ...proposition,
-      eyebrow: valueOrFallback(state.eyebrow, proposition.eyebrow),
-      headline: valueOrFallback(state.heading, proposition.headline),
-      description: valueOrFallback(state.description, proposition.description),
-      cta: {
-        label: valueOrFallback(state.cta_label, proposition.cta.label),
-        href: valueOrFallback(state.cta_url, proposition.cta.href),
-      },
-      displayOrder: Number(state.display_order),
-    }]
-  }).sort((first, second) => first.displayOrder - second.displayOrder)
-
-  if (normalizedStates.length === 0) return { data: heroPropositions, meta: { source: 'mock', total: heroPropositions.length } }
+  if (normalizedStates.length === 0) return mockHeroStates()
 
   return {
     data: normalizedStates,
