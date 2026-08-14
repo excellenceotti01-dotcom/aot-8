@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { heroPropositions } from '../../data'
 import { useAot8Settings } from '../../lib/useAot8Settings'
 import { SiteNavbar } from '../SiteNavbar/SiteNavbar'
 import { HeroContent } from './HeroContent'
@@ -10,26 +9,30 @@ const ROTATION_DELAY = 5000
 const RESUME_DELAY = 1000
 
 export function HomeHero({ showNavbar = true }) {
-  const { settings: aot8Settings } = useAot8Settings()
+  const { settings: aot8Settings, heroStates } = useAot8Settings()
   const [activeIndex, setActiveIndex] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
   const [isFormationSettled, setIsFormationSettled] = useState(false)
   const [reducedMotion, setReducedMotion] = useState(false)
   const resumeTimerRef = useRef(null)
   const interactionsRef = useRef(new Set())
-  const propositions = useMemo(() => heroPropositions.map((proposition) => (
-    proposition.id === 'attend'
-      ? {
-          ...proposition,
-          headline: aot8Settings.hero?.heading ?? proposition.headline,
-          description: aot8Settings.hero?.subheading ?? proposition.description,
-          cta: {
-            label: aot8Settings.hero?.ctaText ?? proposition.cta.label,
-            href: aot8Settings.hero?.ctaUrl ?? proposition.cta.href,
-          },
-        }
-      : proposition
-  )), [aot8Settings.hero])
+  const propositions = useMemo(() => (
+    heroStates.meta.source === 'wordpress'
+      ? heroStates.data
+      : heroStates.data.map((proposition) => (
+        proposition.id === 'attend'
+          ? {
+              ...proposition,
+              headline: aot8Settings.hero?.heading ?? proposition.headline,
+              description: aot8Settings.hero?.subheading ?? proposition.description,
+              cta: {
+                label: aot8Settings.hero?.ctaText ?? proposition.cta.label,
+                href: aot8Settings.hero?.ctaUrl ?? proposition.cta.href,
+              },
+            }
+          : proposition
+      ))
+  ), [aot8Settings.hero, heroStates])
   const activeFormationRef = useRef(propositions[0].networkForm)
   const state = propositions[activeIndex]
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { aot8Settings, registrationSettings as mockRegistrationSettings, sessions as mockSessions, speakers as mockSpeakers, sponsors as mockSponsors } from '../data'
+import { aot8Settings, heroPropositions, registrationSettings as mockRegistrationSettings, sessions as mockSessions, speakers as mockSpeakers, sponsors as mockSponsors } from '../data'
 import { aot8DataClient } from './aot8DataClient'
 import { Aot8SettingsContext } from './aot8SettingsContext'
 
@@ -19,6 +19,9 @@ export function Aot8SettingsProvider({ children }) {
   const [registrationSettings, setRegistrationSettings] = useState(mockRegistrationSettings)
   const [registrationSettingsStatus, setRegistrationSettingsStatus] = useState('loading')
   const [registrationSettingsError, setRegistrationSettingsError] = useState(null)
+  const [heroStates, setHeroStates] = useState({ data: heroPropositions, meta: { source: 'mock', total: heroPropositions.length } })
+  const [heroStatesStatus, setHeroStatesStatus] = useState('loading')
+  const [heroStatesError, setHeroStatesError] = useState(null)
 
   useEffect(() => {
     let isCurrent = true
@@ -83,10 +86,22 @@ export function Aot8SettingsProvider({ children }) {
         setRegistrationSettingsStatus('error')
       })
 
+    aot8DataClient.getHeroStates()
+      .then((nextHeroStates) => {
+        if (!isCurrent) return
+        setHeroStates(nextHeroStates)
+        setHeroStatesStatus('ready')
+      })
+      .catch((nextError) => {
+        if (!isCurrent) return
+        setHeroStatesError(nextError)
+        setHeroStatesStatus('error')
+      })
+
     return () => { isCurrent = false }
   }, [])
 
-  const value = useMemo(() => ({ settings, status, error, speakers, speakersStatus, speakersError, sessions, sessionsStatus, sessionsError, sponsors, sponsorsStatus, sponsorsError, registrationSettings, registrationSettingsStatus, registrationSettingsError }), [settings, status, error, speakers, speakersStatus, speakersError, sessions, sessionsStatus, sessionsError, sponsors, sponsorsStatus, sponsorsError, registrationSettings, registrationSettingsStatus, registrationSettingsError])
+  const value = useMemo(() => ({ settings, status, error, speakers, speakersStatus, speakersError, sessions, sessionsStatus, sessionsError, sponsors, sponsorsStatus, sponsorsError, registrationSettings, registrationSettingsStatus, registrationSettingsError, heroStates, heroStatesStatus, heroStatesError }), [settings, status, error, speakers, speakersStatus, speakersError, sessions, sessionsStatus, sessionsError, sponsors, sponsorsStatus, sponsorsError, registrationSettings, registrationSettingsStatus, registrationSettingsError, heroStates, heroStatesStatus, heroStatesError])
 
   return <Aot8SettingsContext.Provider value={value}>{children}</Aot8SettingsContext.Provider>
 }

@@ -1,5 +1,5 @@
 import { createContext } from 'react'
-import { aot8Settings, registrationSettings, sessions, speakers, sponsors } from '../data'
+import { aot8Settings, heroPropositions, registrationSettings, sessions, speakers, sponsors } from '../data'
 
 export const Aot8SettingsContext = createContext({
   settings: aot8Settings,
@@ -17,4 +17,7 @@ export const Aot8SettingsContext = createContext({
   registrationSettings,
   registrationSettingsStatus: 'loading',
   registrationSettingsError: null,
+  heroStates: { data: heroPropositions, meta: { source: 'mock', total: heroPropositions.length } },
+  heroStatesStatus: 'loading',
+  heroStatesError: null,
 })

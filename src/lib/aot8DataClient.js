@@ -1,5 +1,6 @@
 import {
   aot8Settings,
+  heroPropositions,
   registrationSettings,
   sessions,
   speakers,
@@ -11,6 +12,7 @@ const SPEAKERS_ENDPOINT = 'https://aotlagos.com/wp-json/aot8/v1/speakers'
 const SESSIONS_ENDPOINT = 'https://aotlagos.com/wp-json/aot8/v1/sessions'
 const SPONSORS_ENDPOINT = 'https://aotlagos.com/wp-json/aot8/v1/sponsors'
 const REGISTRATION_SETTINGS_ENDPOINT = 'https://aotlagos.com/wp-json/aot8/v1/registration/settings'
+const HERO_STATES_ENDPOINT = 'https://aotlagos.com/wp-json/aot8/v1/hero-states'
 
 const valueOrFallback = (value, fallback) => (typeof value === 'string' && value.trim() ? value.trim() : fallback)
 
@@ -207,6 +209,55 @@ async function getRegistrationSettings() {
   return normalizeAot8RegistrationSettings(await response.json())
 }
 
+const heroStateKeys = new Set(heroPropositions.map((proposition) => proposition.id))
+
+export function normalizeAot8HeroStates(response) {
+  const cmsStates = response
+  if (!Array.isArray(cmsStates) || cmsStates.length === 0 || cmsStates.length !== heroPropositions.length) {
+    return { data: heroPropositions, meta: { source: 'mock', total: heroPropositions.length } }
+  }
+
+  const statesByKey = new Map()
+  for (const state of cmsStates) {
+    if (!state || typeof state !== 'object' || !heroStateKeys.has(state.state_key) || typeof state.enabled !== 'boolean' || !Number.isFinite(Number(state.display_order)) || statesByKey.has(state.state_key)) {
+      return { data: heroPropositions, meta: { source: 'mock', total: heroPropositions.length } }
+    }
+    statesByKey.set(state.state_key, state)
+  }
+
+  if (statesByKey.size !== heroPropositions.length) return { data: heroPropositions, meta: { source: 'mock', total: heroPropositions.length } }
+
+  const normalizedStates = heroPropositions.flatMap((proposition) => {
+    const state = statesByKey.get(proposition.id)
+    if (!state.enabled) return []
+
+    return [{
+      ...proposition,
+      eyebrow: valueOrFallback(state.eyebrow, proposition.eyebrow),
+      headline: valueOrFallback(state.heading, proposition.headline),
+      description: valueOrFallback(state.description, proposition.description),
+      cta: {
+        label: valueOrFallback(state.cta_label, proposition.cta.label),
+        href: valueOrFallback(state.cta_url, proposition.cta.href),
+      },
+      displayOrder: Number(state.display_order),
+    }]
+  }).sort((first, second) => first.displayOrder - second.displayOrder)
+
+  if (normalizedStates.length === 0) return { data: heroPropositions, meta: { source: 'mock', total: heroPropositions.length } }
+
+  return {
+    data: normalizedStates,
+    meta: { source: 'wordpress', total: normalizedStates.length },
+  }
+}
+
+async function getHeroStates() {
+  const response = await fetch(HERO_STATES_ENDPOINT, { headers: { Accept: 'application/json' } })
+  if (!response.ok) throw new Error(`AOT 8.0 Hero States request failed with ${response.status}.`)
+  return normalizeAot8HeroStates(await response.json())
+}
+
 // The UI should use this boundary instead of importing a CMS endpoint directly.
 export const aot8DataClient = {
   getSettings,
@@ -214,4 +265,5 @@ export const aot8DataClient = {
   getSessions,
   getSponsors,
   getRegistrationSettings,
+  getHeroStates,
 }
