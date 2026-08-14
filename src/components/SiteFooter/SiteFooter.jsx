@@ -1,4 +1,5 @@
-import { aot8Settings, siteNavigation } from '../../data'
+import { siteNavigation } from '../../data'
+import { useAot8Settings } from '../../lib/useAot8Settings'
 import './SiteFooter.css'
 
 function footerLinks() {
@@ -13,8 +14,10 @@ function footerLinks() {
 }
 
 export function SiteFooter() {
+  const { settings: aot8Settings } = useAot8Settings()
   const year = new Date(aot8Settings.dates.start).getFullYear()
   const links = footerLinks()
+  const copyrightText = aot8Settings.footer?.copyrightText ?? `© ${year} ${aot8Settings.shortName}`
 
   return (
     <footer className="site-footer" aria-label="AOT 8.0 footer">
@@ -24,7 +27,7 @@ export function SiteFooter() {
           {links.map((link) => <a href={link.href} key={link.id}>{link.label}</a>)}
         </nav>
       </div>
-      <p className="site-footer__legal">© {year} {aot8Settings.shortName}</p>
+      <p className="site-footer__legal">{copyrightText}</p>
     </footer>
   )
 }

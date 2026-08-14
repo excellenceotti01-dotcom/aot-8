@@ -1,15 +1,13 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useState } from 'react'
-import { registrationSettings } from '../../data'
+import { useAot8Settings } from '../../lib/useAot8Settings'
 import './RegistrationExperience.css'
 
 const transition = { duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }
 
-function RegistrationForm({ registrationType, onBack }) {
+function RegistrationForm({ registrationType, onBack, settings }) {
   const [errors, setErrors] = useState({})
   const [isSubmitted, setIsSubmitted] = useState(false)
-  const settings = registrationSettings.data
-
   const submit = (event) => {
     event.preventDefault()
     const formData = new FormData(event.currentTarget)
@@ -39,10 +37,15 @@ function RegistrationForm({ registrationType, onBack }) {
 
 export function RegistrationExperience() {
   const [activeType, setActiveType] = useState(null)
+  const { registrationSettings } = useAot8Settings()
   const settings = registrationSettings.data
   const reducedMotion = useReducedMotion()
   const activeRegistration = settings.types.find((type) => type.id === activeType)
   const motionProps = { initial: reducedMotion ? false : { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, exit: reducedMotion ? undefined : { opacity: 0, y: -12 }, transition: { ...transition, duration: reducedMotion ? 0 : transition.duration } }
+
+  if (!settings.isOpen) {
+    return <section className="registration-experience" aria-labelledby="registration-content-title"><div className="registration-experience__success" role="status"><p id="registration-content-title">Registration is currently closed.</p></div></section>
+  }
 
   return (
     <section className="registration-experience" aria-labelledby="registration-content-title">
@@ -54,7 +57,7 @@ export function RegistrationExperience() {
               {settings.types.map((type) => <button type="button" key={type.id} onClick={() => setActiveType(type.id)}>{type.label}<span aria-hidden="true">↗</span></button>)}
             </div>
           </motion.div>
-        ) : <motion.div {...motionProps} key={activeRegistration.id}><RegistrationForm registrationType={activeRegistration} onBack={() => setActiveType(null)} /></motion.div>}
+        ) : <motion.div {...motionProps} key={activeRegistration.id}><RegistrationForm registrationType={activeRegistration} onBack={() => setActiveType(null)} settings={settings} /></motion.div>}
       </AnimatePresence>
     </section>
   )

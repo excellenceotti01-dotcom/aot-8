@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { sponsors } from '../../data'
+import { useAot8Settings } from '../../lib/useAot8Settings'
 import { HoverBrandLogo } from '../ui/HoverBrandLogo'
 import './EcosystemSection.css'
 
 export function EcosystemSection() {
+  const { sponsors } = useAot8Settings()
   const sectionRef = useRef(null)
   const [isEntered, setIsEntered] = useState(false)
   const [activeCategory, setActiveCategory] = useState('partners')
   const categories = sponsors.meta.categories
   const organisations = useMemo(
     () => sponsors.data.filter((organisation) => organisation.category === activeCategory),
-    [activeCategory],
+    [activeCategory, sponsors.data],
   )
   const activeCategoryLabel = categories.find((category) => category.id === activeCategory)?.label
 

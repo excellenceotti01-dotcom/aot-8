@@ -1,6 +1,9 @@
-import { aot8Settings, siteNavigation } from '../../data'
+import { siteNavigation } from '../../data'
+import { useAot8Settings } from '../../lib/useAot8Settings'
 
 export function SiteNavbar() {
+  const { settings: aot8Settings } = useAot8Settings()
+
   return (
     <nav className="network-prototype__nav" aria-label="Primary navigation">
       <a className="network-prototype__nav-mark" href="#home">{aot8Settings.shortName}</a>

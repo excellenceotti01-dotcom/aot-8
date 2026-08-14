@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { sessions, speakers } from '../../data'
+import { useAot8Settings } from '../../lib/useAot8Settings'
 import './ProgrammeSection.css'
 
 const clamp = (value) => Math.min(Math.max(value, 0), 1)
@@ -10,6 +10,7 @@ function sessionIndex(progress, length) {
 }
 
 export function ProgrammeSection() {
+  const { sessions, speakers } = useAot8Settings()
   const sectionRef = useRef(null)
   const [progress, setProgress] = useState(0)
   const programme = [...sessions.data].sort((first, second) => first.displayOrder - second.displayOrder)

@@ -1,5 +1,5 @@
-import { aot8Settings } from '../../data'
 import { useCountdown } from '../../hooks/useCountdown'
+import { useAot8Settings } from '../../lib/useAot8Settings'
 import { NetworkFormation } from '../HomeHero/NetworkFormation'
 import './EventSection.css'
 
@@ -17,6 +17,7 @@ function formatEventDate({ start, timezone }) {
 }
 
 export function EventSection() {
+  const { settings: aot8Settings } = useAot8Settings()
   const countdown = useCountdown(aot8Settings.dates.start)
   const venue = aot8Settings.venue
   const dateLabel = formatEventDate(aot8Settings.dates)

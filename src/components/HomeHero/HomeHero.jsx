@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
-import { aot8Settings, heroPropositions } from '../../data'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { heroPropositions } from '../../data'
+import { useAot8Settings } from '../../lib/useAot8Settings'
 import { SiteNavbar } from '../SiteNavbar/SiteNavbar'
 import { HeroContent } from './HeroContent'
 import { NetworkFormation } from './NetworkFormation'
@@ -9,14 +10,28 @@ const ROTATION_DELAY = 5000
 const RESUME_DELAY = 1000
 
 export function HomeHero({ showNavbar = true }) {
+  const { settings: aot8Settings } = useAot8Settings()
   const [activeIndex, setActiveIndex] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
   const [isFormationSettled, setIsFormationSettled] = useState(false)
   const [reducedMotion, setReducedMotion] = useState(false)
   const resumeTimerRef = useRef(null)
   const interactionsRef = useRef(new Set())
-  const activeFormationRef = useRef(heroPropositions[0].networkForm)
-  const state = heroPropositions[activeIndex]
+  const propositions = useMemo(() => heroPropositions.map((proposition) => (
+    proposition.id === 'attend'
+      ? {
+          ...proposition,
+          headline: aot8Settings.hero?.heading ?? proposition.headline,
+          description: aot8Settings.hero?.subheading ?? proposition.description,
+          cta: {
+            label: aot8Settings.hero?.ctaText ?? proposition.cta.label,
+            href: aot8Settings.hero?.ctaUrl ?? proposition.cta.href,
+          },
+        }
+      : proposition
+  )), [aot8Settings.hero])
+  const activeFormationRef = useRef(propositions[0].networkForm)
+  const state = propositions[activeIndex]
 
   useEffect(() => {
     activeFormationRef.current = state.networkForm
@@ -34,10 +49,10 @@ export function HomeHero({ showNavbar = true }) {
     if (isPaused || reducedMotion || !isFormationSettled) return undefined
     const timer = window.setTimeout(() => {
       setIsFormationSettled(false)
-      setActiveIndex((index) => (index + 1) % heroPropositions.length)
+      setActiveIndex((index) => (index + 1) % propositions.length)
     }, ROTATION_DELAY)
     return () => window.clearTimeout(timer)
-  }, [activeIndex, isPaused, isFormationSettled, reducedMotion])
+  }, [activeIndex, isPaused, isFormationSettled, propositions.length, reducedMotion])
 
   useEffect(() => () => window.clearTimeout(resumeTimerRef.current), [])
 
