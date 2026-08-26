@@ -1,6 +1,7 @@
 import { useCountdown } from '../../hooks/useCountdown'
 import { useAot8Settings } from '../../lib/useAot8Settings'
 import { NetworkFormation } from '../HomeHero/NetworkFormation'
+import eventBackgroundVideo from '../../assets/Videos/Hero.video.mp4'
 import './EventSection.css'
 
 function formatValue(value) {
@@ -27,6 +28,10 @@ export function EventSection() {
   return (
     <div className="event-section-track">
     <section className="event-section event-section--entered" aria-labelledby="event-section-title">
+      <video className="event-section__video" autoPlay loop muted playsInline preload="metadata" aria-hidden="true">
+        <source src={eventBackgroundVideo} type="video/mp4" />
+      </video>
+      <div className="event-section__video-treatment" aria-hidden="true" />
       <div className="event-section__network" aria-hidden="true">
         <NetworkFormation formation="eventField" reducedMotion={false} onInteractionStart={() => {}} onInteractionEnd={() => {}} onFormationSettled={() => {}} />
       </div>
