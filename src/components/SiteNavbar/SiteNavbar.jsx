@@ -10,7 +10,22 @@ export function SiteNavbar() {
       <div className="network-prototype__nav-right">
         <div className="network-prototype__nav-links">
           {siteNavigation.primary.map((item) => item.items ? (
-            <details className="network-prototype__nav-menu" key={item.id}>
+            <details
+              className={'network-prototype__nav-menu'}
+              key={item.id}
+              onMouseEnter={(event) => {
+                const menu = event.currentTarget
+                menu.parentElement.querySelectorAll('.network-prototype__nav-menu').forEach((sibling) => {
+                  sibling.open = sibling === menu
+                })
+              }}
+              onMouseLeave={(event) => {
+                event.currentTarget.open = false
+              }}
+              onClick={(event) => {
+                if (event.target.closest('summary')) event.preventDefault()
+              }}
+            >
               <summary>{item.label} <span aria-hidden="true">▼</span></summary>
               <div>{item.items.map((child) => <a href={child.href} key={child.id}>{child.label}</a>)}</div>
             </details>
