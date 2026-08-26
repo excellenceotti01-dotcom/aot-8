@@ -3,6 +3,20 @@ import { aot8Settings, heroPropositions, registrationSettings as mockRegistratio
 import { aot8DataClient } from './aot8DataClient'
 import { Aot8SettingsContext } from './aot8SettingsContext'
 
+function heroStatesWithCmsCopy(overrides = {}) {
+  const states = heroPropositions.map((proposition) => {
+    const override = overrides[proposition.id]
+    return override
+      ? { ...proposition, ...override, cta: { ...proposition.cta, ...override.cta } }
+      : proposition
+  })
+
+  return {
+    data: states,
+    meta: { source: Object.keys(overrides).length > 0 ? 'wordpress' : 'mock', total: states.length },
+  }
+}
+
 export function Aot8SettingsProvider({ children }) {
   const [settings, setSettings] = useState(aot8Settings)
   const [status, setStatus] = useState('loading')
@@ -19,7 +33,7 @@ export function Aot8SettingsProvider({ children }) {
   const [registrationSettings, setRegistrationSettings] = useState(mockRegistrationSettings)
   const [registrationSettingsStatus, setRegistrationSettingsStatus] = useState('loading')
   const [registrationSettingsError, setRegistrationSettingsError] = useState(null)
-  const [heroStates, setHeroStates] = useState({ data: heroPropositions, meta: { source: 'mock', total: heroPropositions.length } })
+  const [heroStates, setHeroStates] = useState(() => heroStatesWithCmsCopy())
   const [heroStatesStatus, setHeroStatesStatus] = useState('loading')
   const [heroStatesError, setHeroStatesError] = useState(null)
 
@@ -87,9 +101,9 @@ export function Aot8SettingsProvider({ children }) {
       })
 
     aot8DataClient.getHeroStates()
-      .then((nextHeroStates) => {
+      .then((heroCopyOverrides) => {
         if (!isCurrent) return
-        setHeroStates(nextHeroStates)
+        setHeroStates(heroStatesWithCmsCopy(heroCopyOverrides))
         setHeroStatesStatus('ready')
       })
       .catch((nextError) => {

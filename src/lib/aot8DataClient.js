@@ -1,6 +1,5 @@
 import {
   aot8Settings,
-  heroPropositions,
   registrationSettings,
   sessions,
   speakers,
@@ -181,9 +180,12 @@ export function normalizeAot8Sponsors(response) {
 
   if (normalizedSponsors.length === 0) return sponsors
 
+  const cmsCategories = new Set(normalizedSponsors.map((sponsor) => sponsor.category))
+  const fallbackSponsors = sponsors.data.filter((sponsor) => !cmsCategories.has(sponsor.category))
+
   return {
-    data: normalizedSponsors,
-    meta: { ...sponsors.meta, source: 'wordpress', total: normalizedSponsors.length },
+    data: [...fallbackSponsors, ...normalizedSponsors],
+    meta: { ...sponsors.meta, source: 'wordpress', total: fallbackSponsors.length + normalizedSponsors.length },
   }
 }
 
@@ -233,34 +235,22 @@ const HERO_STATE_KEYS = [
 
 const heroStateKeys = new Set(HERO_STATE_KEYS)
 const heroStateContentFields = ['eyebrow', 'heading', 'description', 'cta_label', 'cta_url']
-const mockHeroStates = () => ({ data: heroPropositions, meta: { source: 'mock', total: heroPropositions.length } })
 
 function isValidHeroState(state) {
   return state
     && typeof state === 'object'
     && typeof state.state_key === 'string'
     && heroStateKeys.has(state.state_key)
-    && typeof state.enabled === 'boolean'
-    && Number.isFinite(Number(state.display_order))
     && heroStateContentFields.every((field) => isPublicCmsText(state[field]))
 }
 
 export function normalizeAot8HeroStates(response) {
-  if (!Array.isArray(response)) return mockHeroStates()
+  if (!Array.isArray(response)) return {}
 
-  const seenStateKeys = new Set()
-  const normalizedStates = response
-    .filter((state) => state?.enabled === true)
-    .map((state, sourceIndex) => ({ state, sourceIndex, displayOrder: Number(state?.display_order) }))
-    .filter(({ state, displayOrder }) => isValidHeroState(state) && Number.isFinite(displayOrder))
-    .sort((first, second) => first.displayOrder - second.displayOrder || first.sourceIndex - second.sourceIndex)
-    .flatMap(({ state, displayOrder }) => {
-      if (seenStateKeys.has(state.state_key)) return []
-      seenStateKeys.add(state.state_key)
+  return response.reduce((overrides, state) => {
+    if (!isValidHeroState(state) || overrides[state.state_key]) return overrides
 
-      const proposition = heroPropositions.find((item) => item.id === state.state_key)
-      return [{
-        ...proposition,
+    overrides[state.state_key] = {
         eyebrow: state.eyebrow.trim(),
         headline: state.heading.trim(),
         description: state.description.trim(),
@@ -268,16 +258,9 @@ export function normalizeAot8HeroStates(response) {
           label: state.cta_label.trim(),
           href: state.cta_url.trim(),
         },
-        displayOrder,
-      }]
-    })
-
-  if (normalizedStates.length === 0) return mockHeroStates()
-
-  return {
-    data: normalizedStates,
-    meta: { source: 'wordpress', total: normalizedStates.length },
-  }
+    }
+    return overrides
+  }, {})
 }
 
 async function getHeroStates() {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { heroPropositions } from '../../data'
 import { useAot8Settings } from '../../lib/useAot8Settings'
 import { SiteNavbar } from '../SiteNavbar/SiteNavbar'
 import { HeroContent } from './HeroContent'
@@ -9,14 +10,14 @@ const ROTATION_DELAY = 5000
 const RESUME_DELAY = 1000
 
 export function HomeHero({ showNavbar = true }) {
-  const { settings: aot8Settings, heroStates, heroStatesStatus } = useAot8Settings()
+  const { settings: aot8Settings, heroStates } = useAot8Settings()
   const [activeIndex, setActiveIndex] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
   const [isFormationSettled, setIsFormationSettled] = useState(false)
   const [reducedMotion, setReducedMotion] = useState(false)
   const resumeTimerRef = useRef(null)
   const interactionsRef = useRef(new Set())
-  const propositions = heroStatesStatus === 'loading' ? [] : heroStates.data
+  const propositions = Array.isArray(heroStates.data) && heroStates.data.length > 0 ? heroStates.data : heroPropositions
   const activeFormationRef = useRef(null)
   const currentIndex = activeIndex < propositions.length ? activeIndex : 0
   const state = propositions[currentIndex] ?? null
@@ -64,6 +65,7 @@ export function HomeHero({ showNavbar = true }) {
   return (
     <main
       className="network-prototype"
+      id="home"
       aria-label="AOT Lagos 8.0"
     >
       {state && (

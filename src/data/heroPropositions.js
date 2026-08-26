@@ -1,3 +1,5 @@
+import { REGISTRATION_PATH } from '../constants/routes'
+
 // Prototype-only mock content. A future content source can provide the same fields.
 export const heroPropositions = [
   {
@@ -7,7 +9,7 @@ export const heroPropositions = [
     headline: 'Experience AOT 8.0',
     description:
       'Join the people shaping the next chapter of technology, business and innovation in Lagos.',
-    cta: { label: 'Register to attend', href: '/register' },
+    cta: { label: 'Register to attend', href: REGISTRATION_PATH },
   },
   {
     id: 'speak',
