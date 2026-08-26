@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import './HoverBrandLogo.css'
 
-export function HoverBrandLogo({ brands, label, contextLabel, defaultText }) {
+export function HoverBrandLogo({ brands, minimumItems = brands.length, label, contextLabel, defaultText }) {
   const [hoveredId, setHoveredId] = useState(null)
   const reduceMotion = useReducedMotion()
   const activeBrand = brands.find((brand) => brand.id === hoveredId)
@@ -41,6 +41,7 @@ export function HoverBrandLogo({ brands, label, contextLabel, defaultText }) {
             ? <a {...sharedProps} href={brand.destinationUrl} target="_blank" rel="noreferrer" key={brand.id}>{content}</a>
             : <button {...sharedProps} type="button" key={brand.id}>{content}</button>
         })}
+        {Array.from({ length: Math.max(0, minimumItems - brands.length) }, (_, index) => <span className="hover-brand-logo__placeholder" aria-hidden="true" key={`placeholder-${index}`} />)}
       </div>
     </div>
   )

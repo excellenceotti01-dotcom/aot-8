@@ -10,13 +10,19 @@ import {
 const SETTINGS_ENDPOINT = 'https://aotlagos.com/wp-json/aot8/v1/settings'
 const SPEAKERS_ENDPOINT = 'https://aotlagos.com/wp-json/aot8/v1/speakers'
 const SESSIONS_ENDPOINT = 'https://aotlagos.com/wp-json/aot8/v1/sessions'
-const SPONSORS_ENDPOINT = 'https://aotlagos.com/wp-json/aot8/v1/sponsors'
+const ORGANISATIONS_ENDPOINT = 'https://aotlagos.com/wp-json/aot8/v1/organisations'
 const REGISTRATION_SETTINGS_ENDPOINT = 'https://aotlagos.com/wp-json/aot8/v1/registration/settings'
-const HERO_STATES_ENDPOINT = '/.netlify/functions/hero-states'
+// Hero content is authored in WordPress alongside the rest of the AOT 8.0 CMS.
+// Calling the API directly prevents Netlify from becoming a second content source.
+const HERO_STATES_ENDPOINT = 'https://aotlagos.com/wp-json/aot8/v1/hero-states'
 
-const valueOrFallback = (value, fallback) => (typeof value === 'string' && value.trim() ? value.trim() : fallback)
+const isRecord = (value) => value !== null && typeof value === 'object' && !Array.isArray(value)
+const hasTestContent = (value) => /\b(?:cms\s+)?test(?:ing)?\b/i.test(value)
+const isPublicCmsText = (value) => typeof value === 'string' && value.trim() && !hasTestContent(value)
+const valueOrFallback = (value, fallback) => (isPublicCmsText(value) ? value.trim() : fallback)
 
 export function normalizeAot8Settings(response = {}) {
+  if (!isRecord(response)) return aot8Settings
   const eventName = valueOrFallback(response.event_name, aot8Settings.eventName)
   const edition = valueOrFallback(response.edition, aot8Settings.edition)
   const eventDate = valueOrFallback(response.event_date, aot8Settings.dates.start)
@@ -65,7 +71,7 @@ export function normalizeAot8Speakers(response) {
     const id = String(speaker.id ?? speaker.slug ?? '')
     const name = typeof speaker.name === 'string' ? speaker.name.trim() : typeof speaker.title === 'string' ? speaker.title.trim() : ''
     const imageSource = speakerImageSource(speaker)
-    if (!id || !name || !imageSource) return null
+    if (!id || !isPublicCmsText(name) || !imageSource) return null
 
     return {
       id,
@@ -103,7 +109,7 @@ export function normalizeAot8Sessions(response) {
   const normalizedSessions = response.map((session, index) => {
     const id = String(session.id ?? session.slug ?? '')
     const title = typeof session.title === 'string' ? session.title.trim() : typeof session.name === 'string' ? session.name.trim() : ''
-    if (!id || !title) return null
+    if (!id || !isPublicCmsText(title)) return null
 
     return {
       id,
@@ -147,14 +153,19 @@ function sponsorCategory(value) {
   return matchingCategory?.id ?? 'sponsors'
 }
 
+function sponsorDisplayOrder(sponsor, sourceIndex) {
+  const value = Number(sponsor.display_order ?? sponsor.displayOrder ?? sponsor.priority ?? sponsor.menu_order)
+  return Number.isFinite(value) ? value : sourceIndex + 1
+}
+
 export function normalizeAot8Sponsors(response) {
   if (!Array.isArray(response)) return sponsors
 
-  const normalizedSponsors = response.map((sponsor) => {
+  const normalizedSponsors = response.map((sponsor, sourceIndex) => {
     const id = String(sponsor.id ?? sponsor.slug ?? '')
     const name = typeof sponsor.name === 'string' ? sponsor.name.trim() : typeof sponsor.title === 'string' ? sponsor.title.trim() : ''
     const logoSource = sponsorLogoSource(sponsor)
-    if (!id || !name || !logoSource) return null
+    if (!id || !isPublicCmsText(name) || !logoSource) return null
 
     return {
       id,
@@ -162,9 +173,11 @@ export function normalizeAot8Sponsors(response) {
       logo: { src: logoSource, alt: sponsor.logo?.alt ?? sponsor.logo_alt ?? name },
       category: sponsorCategory(sponsor.category ?? sponsor.sponsor_type ?? sponsor.type),
       destinationUrl: sponsor.destination_url ?? sponsor.website_url ?? sponsor.url ?? null,
+      displayOrder: sponsorDisplayOrder(sponsor, sourceIndex),
+      description: typeof sponsor.description === 'string' ? sponsor.description : typeof sponsor.excerpt === 'string' ? sponsor.excerpt : null,
       isSampleData: false,
     }
-  }).filter(Boolean)
+  }).filter(Boolean).sort((first, second) => first.displayOrder - second.displayOrder)
 
   if (normalizedSponsors.length === 0) return sponsors
 
@@ -175,17 +188,17 @@ export function normalizeAot8Sponsors(response) {
 }
 
 async function getSponsors() {
-  const response = await fetch(SPONSORS_ENDPOINT, { headers: { Accept: 'application/json' } })
-  if (!response.ok) throw new Error(`AOT 8.0 sponsors request failed with ${response.status}.`)
+  const response = await fetch(ORGANISATIONS_ENDPOINT, { headers: { Accept: 'application/json' } })
+  if (!response.ok) throw new Error(`AOT 8.0 organisations request failed with ${response.status}.`)
   return normalizeAot8Sponsors(await response.json())
 }
 
 export function normalizeAot8RegistrationSettings(response) {
-  if (!response || typeof response !== 'object' || Array.isArray(response)) return registrationSettings
+  if (!isRecord(response)) return registrationSettings
 
   const hasOpenValue = typeof response.open === 'boolean'
   const hasDeadlineValue = typeof response.deadline === 'string' && response.deadline.trim()
-  const hasRolesValue = response.roles && typeof response.roles === 'object' && !Array.isArray(response.roles)
+  const hasRolesValue = isRecord(response.roles) && Object.values(response.roles).every((value) => typeof value === 'boolean')
   if (!hasOpenValue && !hasDeadlineValue && !hasRolesValue) return registrationSettings
 
   const enabledTypes = hasRolesValue
@@ -229,7 +242,7 @@ function isValidHeroState(state) {
     && heroStateKeys.has(state.state_key)
     && typeof state.enabled === 'boolean'
     && Number.isFinite(Number(state.display_order))
-    && heroStateContentFields.every((field) => typeof state[field] === 'string' && state[field].trim())
+    && heroStateContentFields.every((field) => isPublicCmsText(state[field]))
 }
 
 export function normalizeAot8HeroStates(response) {

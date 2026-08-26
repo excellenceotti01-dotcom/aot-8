@@ -24,11 +24,10 @@ export const sponsors = {
     ...sampleCategory('partners', 4),
     ...sampleCategory('sponsors', 8),
     ...sampleCategory('exhibitors', 7),
-    ...sampleCategory('media-partners', 10),
   ],
   meta: {
     source: 'mock',
-    total: 29,
+    total: 19,
     section: {
       heading: ['The organisations', 'Moving AOT 8.0 forward.'],
       logoCollectionLabel: 'AOT 8.0 organisation logos',
